@@ -15,6 +15,7 @@ const account = privateKeyToAccount(process.env.PRIVATE_KEY);
 
 // Configuración MPP con cuenta completa
 const mppx = Mppx.create({
+  secretKey: process.env.MPP_SECRET_KEY,
   methods: [tempo({
     currency: '0x20c0000000000000000000000000000000000000',
     recipient: account.address,

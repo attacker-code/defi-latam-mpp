@@ -1,5 +1,6 @@
 const express = require("express");
 const { Mppx, tempo } = require("mppx/server");
+const { privateKeyToAccount } = require("viem/accounts");
 const { obtenerYields } = require("./data/yields");
 const { analizarRiesgo, obtenerResumenRiesgo } = require("./data/risks");
 const { obtenerAcciones } = require("./data/stocks");
@@ -9,11 +10,15 @@ require("dotenv").config();
 const app = express();
 app.use(express.json());
 
-// Configuración MPP
+// Cuenta de firma para MPP
+const account = privateKeyToAccount(process.env.PRIVATE_KEY);
+
+// Configuración MPP con cuenta completa
 const mppx = Mppx.create({
   methods: [tempo({
     currency: '0x20c0000000000000000000000000000000000000',
-    recipient: process.env.RECIPIENT_ADDRESS,
+    recipient: account.address,
+    account: account,
   })],
 });
 
@@ -27,6 +32,7 @@ function cobrar(monto) {
       if (result && result.status === 402) return;
       next();
     } catch (e) {
+      console.error("Error MPP:", e.message);
       next();
     }
   };
@@ -39,11 +45,12 @@ app.get("/", (req, res) => {
     descripcion: "Datos de mercados DeFi para LATAM en español.",
     version: "1.0.0",
     origen: "Manta, Ecuador 🇪🇨",
+    wallet: account.address,
     endpoints: [
-      { ruta: "/yields",  precio_usd: 0.02 },
-      { ruta: "/riesgo",  precio_usd: 0.05 },
-      { ruta: "/acciones",precio_usd: 0.03 },
-      { ruta: "/resumen", precio_usd: 0.10 },
+      { ruta: "/yields",   precio_usd: 0.02 },
+      { ruta: "/riesgo",   precio_usd: 0.05 },
+      { ruta: "/acciones", precio_usd: 0.03 },
+      { ruta: "/resumen",  precio_usd: 0.10 },
     ]
   });
 });
@@ -77,11 +84,6 @@ app.get("/resumen", cobrar(0.10), async (req, res) => {
   res.json({
     exito: true,
     fecha: new Date().toISOString(),
-    mercado: {
-      tendencia: "Rotación hacia yield-bearing stablecoins",
-      btc_exchanges: "2.71M BTC — mínimo 12 meses",
-      stablecoin_lider: "USDS +$330M esta semana"
-    },
     yields: yields.data,
     riesgos: riesgos.data.eventos_recientes,
     acciones_disponibles: acciones.data.acciones.length,
@@ -92,7 +94,7 @@ app.get("/resumen", cobrar(0.10), async (req, res) => {
 const PUERTO = process.env.PORT || 3000;
 app.listen(PUERTO, () => {
   console.log(`DeFi LATAM API corriendo en puerto ${PUERTO}`);
-  console.log(`Recipient: ${process.env.RECIPIENT_ADDRESS}`);
+  console.log(`Wallet: ${account.address}`);
 });
 
 module.exports = app;

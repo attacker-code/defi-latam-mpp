@@ -15,8 +15,9 @@ app.use(express.json());
 const TU_WALLET = process.env.RECIPIENT_ADDRESS;
 
 // Facilitador de Coinbase (mainnet Base)
+// DESPUÉS (facilitador público gratuito):
 const facilitatorClient = new HTTPFacilitatorClient({
-  url: "https://api.cdp.coinbase.com/platform/v2/x402"
+  url: "https://x402.org/facilitator"
 });
 
 const resourceServer = new x402ResourceServer(facilitatorClient)

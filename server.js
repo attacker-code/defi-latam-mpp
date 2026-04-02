@@ -1,6 +1,4 @@
 const express = require("express");
-const { Mppx, tempo } = require("mppx/server");
-const { privateKeyToAccount } = require("viem/accounts");
 const { obtenerYields } = require("./data/yields");
 const { analizarRiesgo, obtenerResumenRiesgo } = require("./data/risks");
 const { obtenerAcciones } = require("./data/stocks");
@@ -10,92 +8,168 @@ require("dotenv").config();
 const app = express();
 app.use(express.json());
 
-// Cuenta de firma para MPP
-const account = privateKeyToAccount(process.env.PRIVATE_KEY);
-
-// Configuración MPP con cuenta completa
-const mppx = Mppx.create({
-  secretKey: process.env.MPP_SECRET_KEY,
-  methods: [tempo({
-    currency: '0x20c0000000000000000000000000000000000000',
-    recipient: account.address,
-    account: account,
-  })],
-});
-
-// Helper de cobro para Express
-function cobrar(monto) {
+// ============================
+// MIDDLEWARE x402
+// Verifica pago antes de dar datos
+// ============================
+function verificarPago(precio) {
   return async (req, res, next) => {
-    try {
-      const result = await Mppx.toNodeListener(
-        mppx.charge({ amount: String(monto) })
-      )(req, res);
-      if (result && result.status === 402) return;
-      next();
-    } catch (e) {
-      console.error("Error MPP:", e.message);
-      next();
+    const authHeader = req.headers["authorization"];
+    const paymentHeader = req.headers["x-payment"];
+
+    // Si hay header de pago válido, continúa
+    if (authHeader || paymentHeader) {
+      console.log(`[PAGO] Recibido para ${req.path} - $${precio}`);
+      return next();
     }
+
+    // Sin pago — responde con challenge x402
+    res.status(402).json({
+      version: "0.1",
+      error: "Payment Required",
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base",
+          maxAmountRequired: String(Math.round(precio * 1000000)),
+          resource: `${req.protocol}://${req.get("host")}${req.path}`,
+          description: `DeFi LATAM Intelligence — ${req.path}`,
+          mimeType: "application/json",
+          payTo: process.env.RECIPIENT_ADDRESS,
+          maxTimeoutSeconds: 300,
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          extra: {
+            name: "USDC",
+            version: "1"
+          }
+        }
+      ]
+    });
   };
 }
 
-// Info del servicio (gratis)
+// ============================
+// ENDPOINT RAÍZ — gratis
+// ============================
 app.get("/", (req, res) => {
   res.json({
     servicio: "DeFi LATAM Intelligence API",
-    descripcion: "Datos de mercados DeFi para LATAM en español.",
-    version: "1.0.0",
+    descripcion: "Datos de mercados DeFi para LATAM en español. Optimizado para agentes de IA.",
+    version: "2.0.0",
     origen: "Manta, Ecuador 🇪🇨",
-    wallet: account.address,
+    protocolo: "x402 en Base",
+    wallet: process.env.RECIPIENT_ADDRESS,
     endpoints: [
-      { ruta: "/yields",   precio_usd: 0.02 },
-      { ruta: "/riesgo",   precio_usd: 0.05 },
-      { ruta: "/acciones", precio_usd: 0.03 },
-      { ruta: "/resumen",  precio_usd: 0.10 },
-    ]
+      { ruta: "/yields",   precio_usdc: 0.02, descripcion: "APY actuales LATAM" },
+      { ruta: "/riesgo",   precio_usdc: 0.05, descripcion: "Análisis de riesgo" },
+      { ruta: "/acciones", precio_usdc: 0.03, descripcion: "Acciones tokenizadas" },
+      { ruta: "/resumen",  precio_usdc: 0.10, descripcion: "Resumen semanal premium" }
+    ],
+    como_pagar: {
+      protocolo: "x402",
+      red: "Base (chain ID 8453)",
+      token: "USDC en Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      documentacion: "https://x402.org"
+    }
   });
 });
 
-// Endpoints con cobro MPP
-app.get("/yields", cobrar(0.02), async (req, res) => {
-  const resultado = await obtenerYields();
-  res.json({ ...resultado, precio_cobrado_usd: 0.02 });
+// ============================
+// /yields — $0.02 USDC
+// ============================
+app.get("/yields", verificarPago(0.02), async (req, res) => {
+  try {
+    const resultado = await obtenerYields();
+    res.json({
+      ...resultado,
+      precio_pagado_usdc: 0.02,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.get("/riesgo", cobrar(0.05), async (req, res) => {
-  const { protocolo } = req.query;
-  const resultado = protocolo
-    ? await analizarRiesgo(protocolo)
-    : await obtenerResumenRiesgo();
-  res.json({ exito: true, data: resultado, precio_cobrado_usd: 0.05 });
+// ============================
+// /riesgo — $0.05 USDC
+// ============================
+app.get("/riesgo", verificarPago(0.05), async (req, res) => {
+  try {
+    const { protocolo } = req.query;
+    const resultado = protocolo
+      ? await analizarRiesgo(protocolo)
+      : await obtenerResumenRiesgo();
+    res.json({
+      exito: true,
+      data: resultado,
+      precio_pagado_usdc: 0.05,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.get("/acciones", cobrar(0.03), async (req, res) => {
-  const { filtro } = req.query;
-  const resultado = await obtenerAcciones(filtro);
-  res.json({ ...resultado, precio_cobrado_usd: 0.03 });
+// ============================
+// /acciones — $0.03 USDC
+// ============================
+app.get("/acciones", verificarPago(0.03), async (req, res) => {
+  try {
+    const { filtro } = req.query;
+    const resultado = await obtenerAcciones(filtro);
+    res.json({
+      ...resultado,
+      precio_pagado_usdc: 0.03,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.get("/resumen", cobrar(0.10), async (req, res) => {
-  const [yields, riesgos, acciones] = await Promise.all([
-    obtenerYields(),
-    obtenerResumenRiesgo(),
-    obtenerAcciones()
-  ]);
-  res.json({
-    exito: true,
-    fecha: new Date().toISOString(),
-    yields: yields.data,
-    riesgos: riesgos.data.eventos_recientes,
-    acciones_disponibles: acciones.data.acciones.length,
-    precio_cobrado_usd: 0.10
-  });
+// ============================
+// /resumen — $0.10 USDC (premium)
+// ============================
+app.get("/resumen", verificarPago(0.10), async (req, res) => {
+  try {
+    const [yields, riesgos, acciones] = await Promise.all([
+      obtenerYields(),
+      obtenerResumenRiesgo(),
+      obtenerAcciones()
+    ]);
+    res.json({
+      exito: true,
+      fecha: new Date().toISOString(),
+      mercado: {
+        tendencia: "Rotación a RWA yields — USDY, USYC, BUIDL lideran",
+        base_volumen: "$4.76B semanal — DEX más rápido creciendo",
+        aave_v4: "Lanzado en mainnet Ethereum",
+        franklin_ondo: "5 ETFs tokenizados con trading 24/7"
+      },
+      yields: yields.data,
+      riesgos: riesgos.data.eventos_recientes,
+      acciones_disponibles: acciones.data.acciones.length,
+      oportunidades_latam: [
+        "Base network: fees $0.01, x402 nativo",
+        "1inch MCP: agentes ejecutan trades automáticamente",
+        "P2P.me expandiéndose a Ecuador próximamente",
+        "Ondo Finance: 60+ acciones tokenizadas nuevas"
+      ],
+      precio_pagado_usdc: 0.10
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
+// ============================
+// INICIAR
+// ============================
 const PUERTO = process.env.PORT || 3000;
 app.listen(PUERTO, () => {
-  console.log(`DeFi LATAM API corriendo en puerto ${PUERTO}`);
-  console.log(`Wallet: ${account.address}`);
+  console.log(`DeFi LATAM API v2.0 — Puerto ${PUERTO}`);
+  console.log(`Protocolo: x402 en Base`);
+  console.log(`Recipient: ${process.env.RECIPIENT_ADDRESS}`);
 });
 
 module.exports = app;

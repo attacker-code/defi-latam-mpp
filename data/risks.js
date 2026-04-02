@@ -4,6 +4,18 @@
 const RIESGOS_ACTUALES = {
   timestamp: new Date().toISOString(),
   eventos_recientes: [
+
+
+        // En eventos_recientes agrega:
+    {
+      protocolo: "Drift Protocol",
+      fecha: "2026-04-02",
+      tipo: "HACK",
+      severidad: "CRITICA",
+      descripcion: "Hack de $280M por robo de claves de administrador.",
+      estado: "CONFIRMADO",
+      recomendacion: "EVITAR Drift hasta auditoría completa y restitución."
+    },
     {
       protocolo: "Resolv USR",
       fecha: "2026-03-23",

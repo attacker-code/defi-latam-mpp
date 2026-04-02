@@ -15,35 +15,36 @@ app.use(express.json());
 function verificarPago(precio) {
   return async (req, res, next) => {
     const authHeader = req.headers["authorization"];
-    const paymentHeader = req.headers["x-payment"];
 
-    // Si hay header de pago válido, continúa
-    if (authHeader || paymentHeader) {
-      console.log(`[PAGO] Recibido para ${req.path} - $${precio}`);
+    if (authHeader) {
+      console.log(`[PAGO] Recibido para ${req.path}`);
       return next();
     }
 
-    // Sin pago — responde con challenge x402
+    const monto = Math.round(precio * 1000000).toString();
+    const recurso = `https://defi-latam-mpp-production.up.railway.app${req.path}`;
+
+    // Challenge x402 con WWW-Authenticate header
+    const challenge = {
+      scheme: "exact",
+      network: "base",
+      maxAmountRequired: monto,
+      resource: recurso,
+      description: `DeFi LATAM Intelligence — ${req.path}`,
+      mimeType: "application/json",
+      payTo: process.env.RECIPIENT_ADDRESS,
+      maxTimeoutSeconds: 300,
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      extra: { name: "USDC", version: "1" }
+    };
+
+    const challengeB64 = Buffer.from(JSON.stringify(challenge)).toString("base64");
+
+    res.set("WWW-Authenticate", `Payment realm="defi-latam", challenge="${challengeB64}"`);
     res.status(402).json({
       version: "0.1",
       error: "Payment Required",
-      accepts: [
-        {
-          scheme: "exact",
-          network: "base",
-          maxAmountRequired: String(Math.round(precio * 1000000)),
-          resource: `${req.protocol}://${req.get("host")}${req.path}`,
-          description: `DeFi LATAM Intelligence — ${req.path}`,
-          mimeType: "application/json",
-          payTo: process.env.RECIPIENT_ADDRESS,
-          maxTimeoutSeconds: 300,
-          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          extra: {
-            name: "USDC",
-            version: "1"
-          }
-        }
-      ]
+      accepts: [challenge]
     });
   };
 }

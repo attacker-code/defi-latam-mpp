@@ -40,32 +40,44 @@ if (Mppx && tempo) {
   }
 }
 
-// Middleware de cobro — usa mppx oficial o x402 manual
+const crypto = require("crypto");
+
 function cobrar(monto) {
-  if (mppx && payment) {
-    return payment(mppx.charge, { amount: String(monto) });
-  }
-  // Fallback x402 manual
   return (req, res, next) => {
     const authHeader = req.headers["authorization"];
     if (authHeader) return next();
 
-    const challenge = {
-      scheme: "exact",
-      network: "base",
-      maxAmountRequired: String(Math.round(monto * 1000000)),
-      resource: `https://defi-latam-mpp-production.up.railway.app${req.path}`,
-      description: `DeFi LATAM Intelligence — ${req.path}`,
-      mimeType: "application/json",
-      payTo: process.env.RECIPIENT_ADDRESS,
-      maxTimeoutSeconds: 300,
-      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-      extra: { name: "USDC", version: "1" }
+    // Construir request en base64 (formato PaymentRequest)
+    const requestData = {
+      amount: String(Math.round(monto * 1000000)),
+      currency: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      recipient: process.env.RECIPIENT_ADDRESS,
+      network: "base"
     };
+    const requestB64 = Buffer.from(JSON.stringify(requestData)).toString("base64");
+    const challengeId = crypto.randomUUID();
+    const realm = "defi-latam-mpp-production.up.railway.app";
 
-    const challengeB64 = Buffer.from(JSON.stringify(challenge)).toString("base64");
-    res.set("WWW-Authenticate", `Payment realm="defi-latam", challenge="${challengeB64}", token="exact"`);
-    res.status(402).json({ version: "0.1", error: "Payment Required", accepts: [challenge] });
+    // Formato exacto que mppx espera
+    const wwwAuth = `Payment id="${challengeId}", realm="${realm}", method="tempo", intent="charge", request="${requestB64}"`;
+
+    res.set("WWW-Authenticate", wwwAuth);
+    res.status(402).json({
+      version: "0.1",
+      error: "Payment Required",
+      accepts: [{
+        scheme: "exact",
+        network: "base",
+        maxAmountRequired: String(Math.round(monto * 1000000)),
+        resource: `https://${realm}${req.path}`,
+        description: `DeFi LATAM Intelligence — ${req.path}`,
+        mimeType: "application/json",
+        payTo: process.env.RECIPIENT_ADDRESS,
+        maxTimeoutSeconds: 300,
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        extra: { name: "USDC", version: "1" }
+      }]
+    });
   };
 }
 

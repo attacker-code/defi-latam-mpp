@@ -256,10 +256,10 @@ app.get("/resumen", cobrar(0.10), async (req, res) => {
   });
 });
 
-// Favicon simple
-app.get("/favicon.ico", (req, res) => {
-  res.status(204).end();
-});
+const path = require("path");
+
+// Servir archivos estáticos
+app.use(express.static(path.join(__dirname, "public")));
 
 const PUERTO = process.env.PORT || 3000;
 app.listen(PUERTO, () => {

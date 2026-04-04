@@ -33,7 +33,6 @@ app.get("/.well-known/x402", (req, res) => {
   });
 });
 
-// OpenAPI discovery para x402scan
 app.get("/openapi.json", (req, res) => {
   res.json({
     openapi: "3.1.0",
@@ -46,6 +45,18 @@ app.get("/openapi.json", (req, res) => {
       "/yields": {
         get: {
           summary: "APY actuales de protocolos DeFi accesibles desde LATAM",
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    filtro: { type: "string", description: "Filtrar por protocolo (opcional)" }
+                  }
+                }
+              }
+            }
+          },
           responses: {
             "200": { description: "Datos de yields exitosos" },
             "402": { description: "Payment Required" }
@@ -59,6 +70,18 @@ app.get("/openapi.json", (req, res) => {
       "/riesgo": {
         get: {
           summary: "Análisis de riesgo de protocolos DeFi en tiempo real",
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    protocolo: { type: "string", description: "Protocolo específico a analizar (opcional)" }
+                  }
+                }
+              }
+            }
+          },
           responses: {
             "200": { description: "Análisis de riesgo exitoso" },
             "402": { description: "Payment Required" }
@@ -72,6 +95,18 @@ app.get("/openapi.json", (req, res) => {
       "/acciones": {
         get: {
           summary: "Acciones tokenizadas disponibles desde LATAM sin broker",
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    filtro: { type: "string", description: "Filtrar por ticker o emisor (opcional)" }
+                  }
+                }
+              }
+            }
+          },
           responses: {
             "200": { description: "Lista de acciones exitosa" },
             "402": { description: "Payment Required" }
@@ -85,6 +120,18 @@ app.get("/openapi.json", (req, res) => {
       "/resumen": {
         get: {
           summary: "Resumen semanal completo del mercado DeFi para LATAM",
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    semana: { type: "string", description: "Semana específica en formato YYYY-MM-DD (opcional)" }
+                  }
+                }
+              }
+            }
+          },
           responses: {
             "200": { description: "Resumen exitoso" },
             "402": { description: "Payment Required" }
@@ -207,6 +254,11 @@ app.get("/resumen", cobrar(0.10), async (req, res) => {
     acciones_disponibles: acciones.data.acciones.length,
     precio_cobrado_usd: 0.10
   });
+});
+
+// Favicon simple
+app.get("/favicon.ico", (req, res) => {
+  res.status(204).end();
 });
 
 const PUERTO = process.env.PORT || 3000;

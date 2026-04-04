@@ -126,27 +126,27 @@ function cobrar(monto) {
     const authHeader = req.headers["authorization"];
     if (authHeader) return next();
 
-    // Construir request en base64 (formato PaymentRequest)
-    const requestData = {
+    const challengeId = crypto.randomUUID();
+    const realm = "defi-latam-mpp-production.up.railway.app";
+    
+    const requestData = Buffer.from(JSON.stringify({
       amount: String(Math.round(monto * 1000000)),
       currency: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       recipient: process.env.RECIPIENT_ADDRESS,
-      network: "base"
-    };
-    const requestB64 = Buffer.from(JSON.stringify(requestData)).toString("base64");
-    const challengeId = crypto.randomUUID();
-    const realm = "defi-latam-mpp-production.up.railway.app";
+      network: "eip155:8453"
+    })).toString("base64");
 
-    // Formato exacto que mppx espera
-    const wwwAuth = `Payment id="${challengeId}", realm="${realm}", method="tempo", intent="charge", request="${requestB64}"`;
-
-    res.set("WWW-Authenticate", wwwAuth);
+    // Formato exacto x402 spec
+    res.set("WWW-Authenticate", 
+      `Payment id="${challengeId}", realm="${realm}", method="x402", intent="charge", request="${requestData}"`
+    );
+    
     res.status(402).json({
       version: "0.1",
       error: "Payment Required",
       accepts: [{
         scheme: "exact",
-        network: "base",
+        network: "eip155:8453",
         maxAmountRequired: String(Math.round(monto * 1000000)),
         resource: `https://${realm}${req.path}`,
         description: `DeFi LATAM Intelligence — ${req.path}`,

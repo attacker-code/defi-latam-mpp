@@ -20,6 +20,51 @@ try {
 const app = express();
 app.use(express.json());
 
+// Discovery endpoint para x402scan
+app.get("/.well-known/x402", (req, res) => {
+  res.json({
+    version: "1.0",
+    name: "DeFi LATAM Intelligence API",
+    description: "Datos DeFi en español para LATAM — yields, riesgo, acciones tokenizadas. Construido en Manta, Ecuador.",
+    endpoints: [
+      {
+        path: "/yields",
+        method: "GET",
+        price: "$0.02",
+        currency: "USDC",
+        network: "base",
+        description: "APY actuales de protocolos DeFi accesibles desde LATAM"
+      },
+      {
+        path: "/riesgo",
+        method: "GET",
+        price: "$0.05",
+        currency: "USDC",
+        network: "base",
+        description: "Análisis de riesgo de protocolos DeFi en tiempo real"
+      },
+      {
+        path: "/acciones",
+        method: "GET",
+        price: "$0.03",
+        currency: "USDC",
+        network: "base",
+        description: "Acciones tokenizadas disponibles desde LATAM sin broker"
+      },
+      {
+        path: "/resumen",
+        method: "GET",
+        price: "$0.10",
+        currency: "USDC",
+        network: "base",
+        description: "Resumen semanal completo del mercado DeFi para LATAM"
+      }
+    ],
+    payTo: process.env.RECIPIENT_ADDRESS,
+    contact: "Manta, Ecuador 🇪🇨"
+  });
+});
+
 // Configurar mppx con tempo
 let mppx = null;
 if (Mppx && tempo) {

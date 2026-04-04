@@ -176,37 +176,58 @@ function cobrar(monto) {
     const challengeId = crypto.randomUUID();
     const realm = "defi-latam-mpp-production.up.railway.app";
     
-    const requestData = Buffer.from(JSON.stringify({
+    const requestDataBase = Buffer.from(JSON.stringify({
       amount: String(Math.round(monto * 1000000)),
       currency: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       recipient: process.env.RECIPIENT_ADDRESS,
       network: "eip155:8453"
     })).toString("base64");
 
-    // Formato exacto x402 spec
+    const requestDataTempo = Buffer.from(JSON.stringify({
+      amount: String(Math.round(monto * 1000000)),
+      currency: "0x20c000000000000000000000b9537d11c60e8b50",
+      recipient: process.env.RECIPIENT_ADDRESS,
+      network: "eip155:1620"
+    })).toString("base64");
+
+    // Soporta ambos: Base USDC y Tempo PathUSD
     res.set("WWW-Authenticate", 
-      `Payment id="${challengeId}", realm="${realm}", method="x402", intent="charge", request="${requestData}"`
+      `Payment id="${challengeId}", realm="${realm}", method="x402", intent="charge", request="${requestDataBase}", ` +
+      `Payment id="${crypto.randomUUID()}", realm="${realm}", method="tempo", intent="charge", request="${requestDataTempo}"`
     );
     
     res.status(402).json({
       version: "0.1",
       error: "Payment Required",
-      accepts: [{
-        scheme: "exact",
-        network: "eip155:8453",
-        maxAmountRequired: String(Math.round(monto * 1000000)),
-        resource: `https://${realm}${req.path}`,
-        description: `DeFi LATAM Intelligence — ${req.path}`,
-        mimeType: "application/json",
-        payTo: process.env.RECIPIENT_ADDRESS,
-        maxTimeoutSeconds: 300,
-        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        extra: { name: "USDC", version: "1" }
-      }]
+      accepts: [
+        {
+          scheme: "exact",
+          network: "eip155:8453",
+          maxAmountRequired: String(Math.round(monto * 1000000)),
+          resource: `https://${realm}${req.path}`,
+          description: `DeFi LATAM Intelligence — ${req.path}`,
+          mimeType: "application/json",
+          payTo: process.env.RECIPIENT_ADDRESS,
+          maxTimeoutSeconds: 300,
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          extra: { name: "USDC", version: "1" }
+        },
+        {
+          scheme: "exact",
+          network: "eip155:1620",
+          maxAmountRequired: String(Math.round(monto * 1000000)),
+          resource: `https://${realm}${req.path}`,
+          description: `DeFi LATAM Intelligence — ${req.path}`,
+          mimeType: "application/json",
+          payTo: process.env.RECIPIENT_ADDRESS,
+          maxTimeoutSeconds: 300,
+          asset: "0x20c000000000000000000000b9537d11c60e8b50",
+          extra: { name: "PathUSD", version: "1" }
+        }
+      ]
     });
   };
 }
-
 // Info del servicio (gratis)
 app.get("/", (req, res) => {
   res.json({

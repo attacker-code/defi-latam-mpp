@@ -23,45 +23,79 @@ app.use(express.json());
 // Discovery endpoint para x402scan
 app.get("/.well-known/x402", (req, res) => {
   res.json({
-    version: "1.0",
-    name: "DeFi LATAM Intelligence API",
-    description: "Datos DeFi en español para LATAM — yields, riesgo, acciones tokenizadas. Construido en Manta, Ecuador.",
-    endpoints: [
-      {
-        path: "/yields",
-        method: "GET",
-        price: "$0.02",
-        currency: "USDC",
-        network: "base",
-        description: "APY actuales de protocolos DeFi accesibles desde LATAM"
+    version: 1,
+    resources: [
+      "GET /yields",
+      "GET /riesgo",
+      "GET /acciones",
+      "GET /resumen"
+    ]
+  });
+});
+
+// OpenAPI discovery para x402scan
+app.get("/openapi.json", (req, res) => {
+  res.json({
+    openapi: "3.1.0",
+    info: {
+      title: "DeFi LATAM Intelligence API",
+      version: "3.0.0",
+      "x-guidance": "API de datos DeFi en español para LATAM. Construida en Manta, Ecuador. Paga con USDC en Base para acceder a yields, riesgo, acciones tokenizadas y resumen semanal del mercado DeFi."
+    },
+    paths: {
+      "/yields": {
+        get: {
+          summary: "APY actuales de protocolos DeFi accesibles desde LATAM",
+          responses: {
+            "200": { description: "Datos de yields exitosos" },
+            "402": { description: "Payment Required" }
+          },
+          "x-payment-info": {
+            price: { mode: "fixed", currency: "USD", amount: "0.02" },
+            protocols: [{ "x402": {} }]
+          }
+        }
       },
-      {
-        path: "/riesgo",
-        method: "GET",
-        price: "$0.05",
-        currency: "USDC",
-        network: "base",
-        description: "Análisis de riesgo de protocolos DeFi en tiempo real"
+      "/riesgo": {
+        get: {
+          summary: "Análisis de riesgo de protocolos DeFi en tiempo real",
+          responses: {
+            "200": { description: "Análisis de riesgo exitoso" },
+            "402": { description: "Payment Required" }
+          },
+          "x-payment-info": {
+            price: { mode: "fixed", currency: "USD", amount: "0.05" },
+            protocols: [{ "x402": {} }]
+          }
+        }
       },
-      {
-        path: "/acciones",
-        method: "GET",
-        price: "$0.03",
-        currency: "USDC",
-        network: "base",
-        description: "Acciones tokenizadas disponibles desde LATAM sin broker"
+      "/acciones": {
+        get: {
+          summary: "Acciones tokenizadas disponibles desde LATAM sin broker",
+          responses: {
+            "200": { description: "Lista de acciones exitosa" },
+            "402": { description: "Payment Required" }
+          },
+          "x-payment-info": {
+            price: { mode: "fixed", currency: "USD", amount: "0.03" },
+            protocols: [{ "x402": {} }]
+          }
+        }
       },
-      {
-        path: "/resumen",
-        method: "GET",
-        price: "$0.10",
-        currency: "USDC",
-        network: "base",
-        description: "Resumen semanal completo del mercado DeFi para LATAM"
+      "/resumen": {
+        get: {
+          summary: "Resumen semanal completo del mercado DeFi para LATAM",
+          responses: {
+            "200": { description: "Resumen exitoso" },
+            "402": { description: "Payment Required" }
+          },
+          "x-payment-info": {
+            price: { mode: "fixed", currency: "USD", amount: "0.10" },
+            protocols: [{ "x402": {} }]
+          }
+        }
       }
-    ],
-    payTo: process.env.RECIPIENT_ADDRESS,
-    contact: "Manta, Ecuador 🇪🇨"
+    }
   });
 });
 

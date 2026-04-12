@@ -48,8 +48,26 @@ function cobrar(monto) {
     if (authHeader) return next();
 
     const crypto = require("crypto");
-    const challengeId = crypto.randomUUID();
     const realm = "defi-latam-mpp-production.up.railway.app";
+
+    const requestDataTempo = Buffer.from(JSON.stringify({
+      amount: String(Math.round(monto * 1000000)),
+      currency: "0x20c000000000000000000000b9537d11c60e8b50",
+      recipient: process.env.RECIPIENT_ADDRESS,
+      network: "eip155:1620"
+    })).toString("base64");
+
+    const requestDataBase = Buffer.from(JSON.stringify({
+      amount: String(Math.round(monto * 1000000)),
+      currency: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      recipient: process.env.RECIPIENT_ADDRESS,
+      network: "eip155:8453"
+    })).toString("base64");
+
+    res.set("WWW-Authenticate",
+      `Payment id="${crypto.randomUUID()}", realm="${realm}", method="tempo", intent="charge", request="${requestDataTempo}", ` +
+      `Payment id="${crypto.randomUUID()}", realm="${realm}", method="x402", intent="charge", request="${requestDataBase}"`
+    );
 
     res.status(402).json({
       version: "0.1",

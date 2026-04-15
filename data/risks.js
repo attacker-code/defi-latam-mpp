@@ -5,6 +5,39 @@ const RIESGOS_ACTUALES = {
 
   recent_events: [
     {
+      protocol: "Polkadot Bridge (DOT)",
+      protocolo: "Bridge de Polkadot (DOT)",
+      date: "2026-04-13",
+      fecha: "2026-04-13",
+      type: "HACK",
+      tipo: "HACK",
+      severity: "CRITICAL",
+      severidad: "CRITICA",
+      description_en: "Attacker minted 1 billion bridged DOT tokens via bridge verification flaw. $237K extracted from liquidity pools. Automated bots replicated the attack. Upbit and Bithumb suspended DOT deposits.",
+      descripcion: "Atacante acuñó 1 billón de tokens DOT puenteados via fallo en verificación del bridge. $237K extraídos de pools. Bots automatizados replicaron el ataque. Upbit y Bithumb suspendieron depósitos de DOT.",
+      status: "ACTIVE",
+      estado: "ACTIVO",
+      recommendation_en: "AVOID bridged DOT completely. Do not deposit DOT on any exchange until fully resolved.",
+      recomendacion: "EVITAR DOT puenteado completamente. No depositar DOT en ningún exchange hasta resolución total."
+    },
+    {
+      protocol: "Aave — Governance Update",
+      protocolo: "Aave — Actualización de Gobernanza",
+      date: "2026-04-13",
+      fecha: "2026-04-13",
+      type: "GOVERNANCE",
+      tipo: "GOBERNANZA",
+      severity: "POSITIVE",
+      severidad: "POSITIVA",
+      description_en: "'Aave Will Win' proposal approved with 75% support. 100% of all protocol revenues now go to DAO treasury. Aave Labs receives $25M grant. LlamaRisk confirmed as sole risk manager.",
+      descripcion: "Propuesta 'Aave Will Win' aprobada con 75% de apoyo. 100% de ingresos del protocolo van al treasury de la DAO. Aave Labs recibe grant de $25M. LlamaRisk confirmado como gestor único.",
+      status: "RESOLVED",
+      estado: "RESUELTO",
+      recommendation_en: "POSITIVE for Aave. Protocol now fully aligned with DAO. Safe to use.",
+      recomendacion: "POSITIVO para Aave. Protocolo ahora alineado con la DAO. Seguro de usar."
+    },
+
+    {
       protocol: "Drift Protocol",
       protocolo: "Drift Protocol",
       date: "2026-04-01",
@@ -30,8 +63,8 @@ const RIESGOS_ACTUALES = {
       tipo: "RIESGO DE LIQUIDEZ",
       severity: "HIGH",
       severidad: "ALTA",
-      description_en: "World Liberty Fi (Trump family project) deposited $484M in illiquid WLFI tokens as collateral to borrow USDC. If position approaches liquidation, bad debt risk is extreme.",
-      descripcion: "World Liberty Fi depositó $484M en tokens WLFI ilíquidos como colateral para pedir prestado USDC. Si la posición se acerca a liquidación, riesgo de bad debt es extremo.",
+      description_en: "World Liberty Fi partially resolved: debt reduced from $484M to $162M ($152M USD1 + $10.31M USDC) against ~$400-460M in WLFI tokens. Risk reduced but still present.",
+      descripcion: "World Liberty Fi resolvió parcialmente: deuda reducida de $484M a $162M ($152M USD1 + $10.31M USDC) contra ~$400-460M en tokens WLFI. Riesgo reducido pero presente.",
       status: "ACTIVE",
       estado: "ACTIVO",
       recommendation_en: "WITHDRAW stablecoin deposits from WLFI-collateral pools on Dolomite immediately.",

@@ -116,6 +116,55 @@ app.get('/.well-known/x402', (req, res) => {
   });
 });
 
+// OpenAPI spec para agentcash discovery
+app.get('/openapi.json', (req, res) => {
+  res.json({
+    openapi: "3.1.0",
+    info: {
+      title: "DeFi LATAM Intelligence API",
+      description: "First x402-native DeFi data API in Spanish for Latin America. Built from Manta, Ecuador.",
+      version: "3.0.0"
+    },
+    servers: [
+      { url: "https://defi-latam-mpp-production.up.railway.app" }
+    ],
+    paths: {
+      "/yields": {
+        get: {
+          summary: "DeFi yields in Spanish",
+          description: "Returns top DeFi yield opportunities for LATAM investors. Costs $0.02 USDC via x402.",
+          "x-price": "0.02",
+          "x-currency": "USDC"
+        }
+      },
+      "/riesgo": {
+        get: {
+          summary: "DeFi risk analysis in Spanish",
+          description: "Risk alerts and protocol safety status. Costs $0.05 USDC via x402.",
+          "x-price": "0.05",
+          "x-currency": "USDC"
+        }
+      },
+      "/acciones": {
+        get: {
+          summary: "Tokenized stocks in Spanish",
+          description: "Tokenized stocks available without broker. Costs $0.03 USDC via x402.",
+          "x-price": "0.03",
+          "x-currency": "USDC"
+        }
+      },
+      "/resumen": {
+        get: {
+          summary: "Weekly DeFi summary in Spanish",
+          description: "Weekly DeFi market summary for LATAM. Costs $0.10 USDC via x402.",
+          "x-price": "0.10",
+          "x-currency": "USDC"
+        }
+      }
+    }
+  });
+});
+
 // Info del servicio (gratis)
 app.get("/", (req, res) => {
   res.json({

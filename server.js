@@ -102,6 +102,20 @@ function cobrar(monto) {
   };
 }
 
+// Discovery para Agentic.Market
+app.get('/.well-known/x402', (req, res) => {
+  res.json({
+    version: 1,
+    origin: "https://defi-latam-mpp-production.up.railway.app",
+    resources: [
+      { path: "/yields", price: "$0.02", description: "DeFi yields in Spanish" },
+      { path: "/riesgo", price: "$0.05", description: "DeFi risk analysis in Spanish" },
+      { path: "/acciones", price: "$0.03", description: "Tokenized stocks in Spanish" },
+      { path: "/resumen", price: "$0.10", description: "Weekly DeFi summary in Spanish" }
+    ]
+  });
+});
+
 // Info del servicio (gratis)
 app.get("/", (req, res) => {
   res.json({

@@ -116,6 +116,42 @@ app.get('/.well-known/x402', (req, res) => {
   });
 });
 
+// llms.txt para Agentic.Market
+app.get('/llms.txt', (req, res) => {
+  res.type('text/plain');
+  res.send(`# DeFi LATAM Intelligence API
+> First x402-native DeFi data API in Spanish for Latin America. Built from Manta, Ecuador.
+
+## Services
+AI agents can purchase DeFi intelligence data automatically via x402 protocol on Base mainnet. No API keys. No accounts. Pay per request in USDC.
+
+## API Endpoints
+
+### GET /yields — $0.02 USDC
+Real-time DeFi yield opportunities for LATAM investors in Spanish.
+
+### GET /riesgo — $0.05 USDC
+DeFi risk analysis and hack alerts in Spanish.
+
+### GET /acciones — $0.03 USDC
+Tokenized stocks available without broker in Spanish.
+
+### GET /resumen — $0.10 USDC
+Weekly DeFi market summary in Spanish for LATAM.
+
+## Payment
+- Protocol: x402
+- Network: Base mainnet (eip155:8453)
+- Asset: USDC
+- No signup required. No API keys.
+
+## Origin
+https://defi-latam-mpp-production.up.railway.app
+
+## Built by
+@defilatam_ — Manta, Ecuador 🇪🇨`);
+});
+
 // OpenAPI spec para agentcash discovery
 app.get('/openapi.json', (req, res) => {
   res.json({
